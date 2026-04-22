@@ -39,10 +39,10 @@ BelezaMulher/
 
 ## Roadmap
 - [x] Planejamento e modelagem
-- [ ] Setup projeto
-- [ ] Desenvolvimento backend
-- [ ] Desenvolvimento web
-- [ ] Desenvolvimento mobile
+- [x] Setup projeto
+- [x] Desenvolvimento backend
+- [x] Desenvolvimento web
+- [x] Desenvolvimento mobile
 - [ ] Testes e segurança
 - [ ] Deploy
 

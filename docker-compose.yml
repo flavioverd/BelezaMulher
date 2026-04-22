@@ -1,0 +1,42 @@
+# Docker Compose para ambiente de desenvolvimento
+# Beleza Mulher - E-commerce
+
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: belezamulher_postgres
+    environment:
+      POSTGRES_DB: belezamulher
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - belezamulher_network
+
+  # PgAdmin para gerenciar banco (opcional)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: belezamulher_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@belezamulher.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - belezamulher_network
+
+volumes:
+  postgres_data:
+
+networks:
+  belezamulher_network:
+    driver: bridge
