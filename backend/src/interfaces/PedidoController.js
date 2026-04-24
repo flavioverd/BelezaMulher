@@ -22,7 +22,7 @@ class PedidoController {
       for (const item of itens) { // for...of itera array
         const produto = await this.produtoRepository.buscarPorId(item.produtoId); // Busca produto
         if (!produto) return res.status(400).json({ erro: `Produto ${item.produtoId} não encontrado` }); // 400
-        if (produto.estoque < item.quantidade) return res.status(400).json({ erro: `Estoque insuficiente para ${produto.nome` }); // Validação estoque
+        if (produto.estoque < item.quantidade) return res.status(400).json({ erro: `Estoque insuficiente para ${produto.nome}` }); // Validação estoque
         total += produto.preco * item.quantidade; // Acumula total
         itensValidados.push({ // Push objeto
           produtoId: produto.id, 

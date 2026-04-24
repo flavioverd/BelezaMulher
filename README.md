@@ -43,8 +43,8 @@ BelezaMulher/
 - [x] Desenvolvimento backend
 - [x] Desenvolvimento web
 - [x] Desenvolvimento mobile
-- [ ] Testes e segurança
-- [ ] Deploy
+- [x] Testes e segurança
+- [x] Deploy
 
 ## Contribuição
 Projeto solo, mas aberto a sugestões.

@@ -1,0 +1,117 @@
+# GitHub Actions - CI/CD Pipeline
+# BelezaMulher E-commerce
+
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Testes e build
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Backend
+      - name: Instalação dependências (Backend)
+        run: |
+          cd backend
+          npm ci
+
+      - name: Testes (Backend)
+        run: |
+          cd backend
+          npm test -- --ci --coverage
+
+      - name: Build (Backend)
+        run: |
+          cd backend
+          npm run build
+
+      # Web
+      - name: Instalação dependências (Web)
+        run: |
+          cd web
+          npm ci
+
+      - name: Testes (Web)
+        run: |
+          cd web
+          npm test -- --ci --watchAll=false
+
+      - name: Build (Web)
+        run: |
+          cd web
+          npm run build
+
+  # Build Docker (executa após testes)
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: belezamulher/backend:${{ github.sha }}
+          cache-from: type=registry,ref=belezamulher/backend:latest
+          cache-to: type=inline
+
+      - name: Build and push Web
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web
+          push: true
+          tags: belezamulher/web:${{ github.sha }}
+          cache-from: type=registry,ref=belezamulher/web:latest
+          cache-to: type=inline
+
+  # Deploy (apenas para main)
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /app/belezamulher
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
+            docker system prune -f

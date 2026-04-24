@@ -1,4 +1,18 @@
 {
-  "name": "BelezaMulherApp",
-  "displayName": "Beleza Mulher"
+  "expo": {
+    "name": "BelezaMulher",
+    "slug": "belezamulher",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "belezamulher",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "package": "com.belezamulher.app"
+    }
+  }
 }
