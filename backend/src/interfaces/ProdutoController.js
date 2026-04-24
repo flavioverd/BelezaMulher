@@ -1,18 +1,30 @@
 //#region Produto Controller - Interface (Express)
 const Produto = require('../domain/Produto'); // Import Entity
+const UploadService = require('./../infrastructure/services/UploadService'); // Import Upload Service
 
 class ProdutoController {
   //#region constructor - Injeção Repository
   constructor(produtoRepository) {
     this.produtoRepository = produtoRepository;
+    this.uploadService = new UploadService(); // Instancia Upload Service
   }
   //#endregion
 
   //#region criar - POST /produtos
   async criar(req, res) {
     try {
-      const { nome, descricao, preco, tamanho, cor, imagemUrl, estoque } = req.body; // Destructuring body
+      // Processa dados do formulário (incluindo arquivo se presente)
+      let imagemUrl = null;
+      
+      // Se houver arquivo de imagem enviado
+      if (req.file) {
+        // Retorna apenas o nome do arquivo (URL será construída pelo frontend)
+        imagemUrl = req.file.filename;
+      }
+      
+      const { nome, descricao, preco, tamanho, cor, estoque } = req.body; // Destructuring body
       if (!nome || !preco) return res.status(400).json({ erro: 'Nome e preço são obrigatórios' }); // Validação básica
+      
       const produto = new Produto(null, nome, descricao, preco, tamanho, cor, imagemUrl, estoque); // Instancia Entity
       const produtoSalvo = await this.produtoRepository.salvar(produto); // Repository save
       res.status(201).json(produtoSalvo); // 201 Created
@@ -54,7 +66,23 @@ class ProdutoController {
   async atualizar(req, res) {
     try {
       const { id } = req.params; // URL param
-      const { nome, descricao, preco, tamanho, cor, imagemUrl, estoque } = req.body; // Body
+      
+      // Processa dados do formulário (incluindo arquivo se presente)
+      let imagemUrl = null;
+      
+      // Se houver arquivo de imagem enviado
+      if (req.file) {
+        // Prime remove a imagem antiga se existir
+        const produtoExistente = await this.produtoRepository.buscarPorId(id);
+        if (produtoExistente && produtoExistente.imagemUrl) {
+          this.uploadService.deleteFile(produtoExistente.imagemUrl);
+        }
+        
+        // Retorna apenas o nome do arquivo
+        imagemUrl = req.file.filename;
+      }
+      
+      const { nome, descricao, preco, tamanho, cor, estoque } = req.body; // Body
       const produto = new Produto(id, nome, descricao, preco, tamanho, cor, imagemUrl, estoque); // Entity com ID
       const produtoAtualizado = await this.produtoRepository.atualizar(id, produto); // Repository update
       if (!produtoAtualizado) return res.status(404).json({ erro: 'Produto não encontrado' }); // Null check
@@ -68,6 +96,13 @@ class ProdutoController {
   async deletar(req, res) {
     try {
       const { id } = req.params;
+      
+      // Remove a imagem associada antes de deletar o produto
+      const produto = await this.produtoRepository.buscarPorId(id);
+      if (produto && produto.imagemUrl) {
+        this.uploadService.deleteFile(produto.imagemUrl);
+      }
+      
       const deletado = await this.produtoRepository.deletar(id); // Repository delete
       if (!deletado) return res.status(404).json({ erro: 'Produto não encontrado' }); // 404
       res.status(204).send(); // 204 = No Content (resposta vazia)

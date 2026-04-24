@@ -70,6 +70,8 @@ app.put('/usuarios/:id', (req, res) => usuarioController.atualizarUsuario(req, r
 
 // Produtos (CRUD)
 app.use('/produtos', produtoRoutes(produtoController)); // Mount router em /produtos
+// Serve uploaded files
+produtoRoutes.serveUploads(app); // Serve uploads static files
 
 // Pedidos (CRUD + auth)
 app.use('/pedidos', validarPedido, authMiddleware, pedidoRoutes(pedidoController)); // Mount router, valida + auth
